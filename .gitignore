@@ -1,0 +1,28 @@
+
+# Eclipse project files
+.project
+.settings/	
+.classpath
+
+# OS X files
+.DS_Store
+
+# Ignore IntelliJ-based project files
+*.iml
+.idea/*
+
+# This ensures everyone will use the same code formatter within the IDE
+!.idea/codeStyles/
+!.idea/codeStyleSettings.xml
+!.idea/fileTemplates/
+
+# Android Studio files
+local.properties
+.gradle
+build/
+
+# Misc
+certs/
+node_modules/
+release-keys/
+*.exec
