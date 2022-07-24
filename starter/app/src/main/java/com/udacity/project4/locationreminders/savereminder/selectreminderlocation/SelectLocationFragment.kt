@@ -4,6 +4,8 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
@@ -31,6 +33,7 @@ import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
+import java.util.*
 
 private const val TAG = "SelectLocationFragment"
 
@@ -107,12 +110,14 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         setMapStyle(map)
         enableCurrentLocation()
+        setPoiClick(map)
     }
 
     private fun enableCurrentLocation(){
         if (isPermissionGranted()) {
             map.setMyLocationEnabled(true)
             zoomToCurrentLocation()
+            showInstructionDialog()
         }
         else {
             ActivityCompat.requestPermissions(
@@ -177,5 +182,30 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         } catch (e: Resources.NotFoundException) {
             Log.e(TAG, "Can't find style. Error: ", e)
         }
+    }
+
+    private fun setPoiClick(map: GoogleMap) {
+        map.setOnPoiClickListener { poi ->
+            val poiMarker = map.addMarker(
+                MarkerOptions()
+                    .position(poi.latLng)
+                    .title(poi.name)
+            )
+            poiMarker?.showInfoWindow()
+        }
+    }
+
+    private fun showInstructionDialog(){
+        val alertDialog: AlertDialog? = activity?.let {
+            val builder = AlertDialog.Builder(it,R.style.AlertDialogCustom)
+            builder.apply {
+                setNeutralButton(R.string.ok
+                ) { dialog, id ->
+                    dialog.cancel()
+                }
+                setTitle(R.string.select_poi)
+            }.create()
+        }
+        alertDialog?.show()
     }
 }
