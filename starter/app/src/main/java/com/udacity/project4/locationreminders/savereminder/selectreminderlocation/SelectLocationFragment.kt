@@ -2,11 +2,13 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -39,6 +41,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSelectLocationBinding
+
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
     private lateinit var map: GoogleMap
 
@@ -100,12 +104,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        val latitude = 48.140953468320475
-        val longitude = 11.57835593332889
-        val zoomLevel = 15f
-        val homeLatLong = LatLng(latitude,longitude)
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(homeLatLong,zoomLevel))
-        map.addMarker(MarkerOptions().position(homeLatLong))
 
         setMapStyle(map)
         enableCurrentLocation()
@@ -114,6 +112,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun enableCurrentLocation(){
         if (isPermissionGranted()) {
             map.setMyLocationEnabled(true)
+            zoomToCurrentLocation()
         }
         else {
             ActivityCompat.requestPermissions(
@@ -123,6 +122,26 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             )
         }
     }
+
+
+    private fun zoomToCurrentLocation() {
+        fusedLocationProviderClient =
+            LocationServices.getFusedLocationProviderClient(requireActivity())
+        fusedLocationProviderClient.getLastLocation().addOnSuccessListener { location: Location? ->
+            if (location != null) {
+                var zoomLevel = 16f
+                map.moveCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                        LatLng(
+                            location.latitude,
+                            location.longitude
+                        ), zoomLevel
+                    )
+                )
+            }
+        }
+    }
+
 
     private fun isPermissionGranted() : Boolean {
         return ContextCompat.checkSelfPermission(
@@ -146,8 +165,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private fun setMapStyle(map: GoogleMap) {
         try {
-            // Customize the styling of the base map using a JSON object defined
-            // in a raw resource file.
             val success = map.setMapStyle(
                 MapStyleOptions.loadRawResourceStyle(
                     requireActivity(),
