@@ -49,6 +49,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private lateinit var map: GoogleMap
 
+    private var currentMarker = MarkerOptions()
+    private lateinit var currentPOI:PointOfInterest
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
@@ -65,22 +68,21 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         val mapFragment = childFragmentManager.findFragmentById(R.id.mapsFragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-//        TODO: add the map setup implementation
-//        TODO: zoom to the user location after taking his permission
-//        TODO: add style to the map
-//        TODO: put a marker to location that the user selected
-
-
-//        TODO: call this function after the user confirms on the selected location
-        onLocationSelected()
+        binding.saveButton.setOnClickListener { onLocationSelected() }
 
         return binding.root
     }
 
     private fun onLocationSelected() {
-        //        TODO: When the user confirms on the selected location,
-        //         send back the selected location details to the view model
-        //         and navigate back to the previous fragment to save the reminder and add the geofence
+        if (currentMarker.position != null) {
+            _viewModel.longitude.value = currentMarker.position.longitude
+            _viewModel.latitude.value = currentMarker.position.latitude
+            _viewModel.reminderSelectedLocationStr.value = currentMarker.title
+            _viewModel.selectedPOI.value = currentPOI
+            _viewModel.navigationCommand.value = NavigationCommand.Back
+        } else {
+            _viewModel.showSnackBarInt.value = R.string.err_select_location
+        }
     }
 
 
@@ -111,6 +113,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         setMapStyle(map)
         enableCurrentLocation()
         setPoiClick(map)
+
+        map.uiSettings.isZoomControlsEnabled = true
+        map.uiSettings.isZoomGesturesEnabled = true
     }
 
     private fun enableCurrentLocation(){
@@ -186,11 +191,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private fun setPoiClick(map: GoogleMap) {
         map.setOnPoiClickListener { poi ->
-            val poiMarker = map.addMarker(
-                MarkerOptions()
-                    .position(poi.latLng)
-                    .title(poi.name)
-            )
+            currentPOI = poi
+            currentMarker.position(poi.latLng)
+            currentMarker.title(poi.name)
+            val poiMarker = map.addMarker(currentMarker)
             poiMarker?.showInfoWindow()
         }
     }

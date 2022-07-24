@@ -19,4 +19,10 @@
     <style name="AlertDialogCustom" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="android:textColor">@color/primaryDarkColor</item>
     </style>
+
+    <style name="standardButton" parent="AppTheme">
+        <item name="android:background">@color/primaryColor</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
 </resources>
