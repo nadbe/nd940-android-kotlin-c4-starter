@@ -40,7 +40,6 @@ class AuthenticationActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.loginButton.setOnClickListener { launchSignInFlow() }
-//          TODO: If the user was authenticated, send him to RemindersActivity
 
 
         viewModel.authenticationState.observe(this, Observer { authenticationState ->
