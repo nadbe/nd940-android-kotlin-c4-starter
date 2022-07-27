@@ -5,6 +5,7 @@
 
     <data>
         <!--Data item that holds the reminder details-->
+        <import type="android.view.View"/>
         <variable
             name="reminderDataItem"
             type="com.udacity.project4.locationreminders.reminderslist.ReminderDataItem" />
@@ -16,18 +17,55 @@
         android:gravity="center"
         android:orientation="vertical"
         tools:context=".locationreminders.ReminderDescriptionActivity">
-        <!--TODO: add the design of the reminder details-->
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:layout_marginBottom="@dimen/margin_normal"
             android:text="Reminder Details"
-            android:textSize="@dimen/text_size_large"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:textSize="@dimen/text_size_large" />
+
+        <TextView
+            android:id="@+id/textViewTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@{reminderDataItem.title}"
+            android:visibility="@{reminderDataItem.title != null ? View.VISIBLE: View.GONE}"
+            tools:text="Title"
+            android:textColor="@color/black"
+            android:layout_marginBottom="@dimen/padding_small"
+            android:gravity="center"
+            android:textSize="16sp"
+            android:paddingStart="@dimen/margin_normal"/>
+
+        <TextView
+            android:id="@+id/textViewDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@{reminderDataItem.description}"
+            android:visibility="@{reminderDataItem.description != null ? View.VISIBLE: View.GONE}"
+            tools:text="Description"
+            android:textColor="@color/black"
+            android:layout_marginBottom="@dimen/padding_small"
+            android:gravity="center"
+            android:textSize="16sp"
+            android:paddingStart="@dimen/margin_normal"/>
+
+        <TextView
+            android:id="@+id/textViewLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@{reminderDataItem.location}"
+            android:visibility="@{reminderDataItem.location != null ? View.VISIBLE: View.GONE}"
+            tools:text="Location"
+            android:textColor="@color/black"
+            android:layout_marginBottom="@dimen/padding_small"
+            android:gravity="center"
+            android:textSize="16sp"
+            android:paddingStart="@dimen/margin_normal"/>
 
     </LinearLayout>
 </layout>
