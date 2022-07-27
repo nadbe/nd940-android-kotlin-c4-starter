@@ -98,16 +98,16 @@ class SaveReminderFragment : BaseFragment() {
             .addGeofence(geofence)
             .build()
 
-        //TODO: Outsource
-       if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) === PackageManager.PERMISSION_GRANTED) {
-        geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent)?.run {
-            addOnSuccessListener {
-                Log.e("Add Geofence", geofence.requestId)
+
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) === PackageManager.PERMISSION_GRANTED) {
+            geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent)?.run {
+                addOnSuccessListener {
+                    Log.e("Add Geofence", geofence.requestId)
+                }
             }
         }
     }
 
-    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -118,7 +118,7 @@ class SaveReminderFragment : BaseFragment() {
     companion object {
         internal const val ACTION_GEOFENCE_EVENT =
             "SaveReminderFragment.ACTION_GEOFENCE_EVENT"
-        internal const val GEOFENCE_RADIUS_IN_METERS = 1000f
+        internal const val GEOFENCE_RADIUS_IN_METERS = 100f
         val GEOFENCE_EXPIRATION_IN_MILLISECONDS: Long = TimeUnit.HOURS.toMillis(1)
     }
 }
