@@ -25,8 +25,7 @@ import org.koin.core.context.GlobalContext
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 class RemindersListViewModelTest {
-
-    //TODO: provide testing to the RemindersListViewModel and its live data objects
+    
     private lateinit var remindersListViewModel: RemindersListViewModel
     private lateinit var reminderRepository: FakeDataSource
     private lateinit var saveReminderViewModel: SaveReminderViewModel
