@@ -25,6 +25,8 @@ import org.mockito.Mockito.verify
 @MediumTest
 class ReminderListFragmentTest {
 
+    //private lateinit var reminderDataSource:Reminder
+
 //    TODO: test the navigation of the fragments.
 //    TODO: test the displayed data on the UI.
 //    TODO: add testing for the error messages.
