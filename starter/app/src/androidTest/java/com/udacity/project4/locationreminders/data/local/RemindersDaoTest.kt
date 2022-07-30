@@ -6,8 +6,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 import com.google.common.truth.Truth.assertThat
-import com.udacity.project4.MainCoroutineRule
+import com.udacity.project4.MyApp
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
+import kotlinx.coroutines.Dispatchers
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -16,37 +17,48 @@ import org.junit.runner.RunWith;
 import kotlinx.coroutines.ExperimentalCoroutinesApi;
 import org.junit.After
 import org.junit.Test
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
+import org.koin.test.KoinTest
+import org.koin.test.inject
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 //Unit test the DAO
 @SmallTest
-class RemindersDaoTest {
+class RemindersDaoTest : KoinTest {
 
-    private lateinit var database: RemindersDatabase
+    private val database: RemindersDatabase by inject()
 
-  /*  @ExperimentalCoroutinesApi
-    @get:Rule
-    val mainCoroutineRule = MainCoroutineRule()*/
+    private  val koinTestModules = module {
+
+        single {
+            Room.inMemoryDatabaseBuilder(
+                ApplicationProvider.getApplicationContext(),
+                RemindersDatabase::class.java
+            ).allowMainThreadQueries().build()
+        }
+    }
+
 
     @get:Rule
     val instantExecutorRule = InstantTaskExecutorRule()
 
     @Before
-    fun initDb() {
-        database = Room.inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext(),
-            RemindersDatabase::class.java
-        ).allowMainThreadQueries().build()
+    fun init() {
+        stopKoin()
+        startKoin {
+            androidContext(ApplicationProvider.getApplicationContext<MyApp>())
+            modules(listOf(koinTestModules))
+        }
     }
 
     @After
-    fun closeDb() = database.close()
-
-    @After
-    fun stopKoinContext(){
-        GlobalContext.stopKoin()
+    fun finish() {
+        stopKoin()
     }
 
     @Test

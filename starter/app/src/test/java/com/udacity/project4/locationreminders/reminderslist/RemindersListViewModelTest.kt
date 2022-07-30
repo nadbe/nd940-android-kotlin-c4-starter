@@ -1,6 +1,7 @@
 package com.udacity.project4.locationreminders.reminderslist
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
@@ -19,15 +20,39 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.GlobalContext
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
+import org.koin.test.KoinTest
+import org.koin.test.inject
 
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
-class RemindersListViewModelTest {
+class RemindersListViewModelTest : KoinTest {
 
-    private lateinit var remindersListViewModel: RemindersListViewModel
-    private lateinit var reminderRepository: FakeDataSource
-    private lateinit var saveReminderViewModel: SaveReminderViewModel
+    private val remindersListViewModel: RemindersListViewModel by inject()
+    private val reminderRepository: FakeDataSource by inject()
+    private val saveReminderViewModel: SaveReminderViewModel by inject()
+
+
+    private  val koinTestModules = module {
+
+        viewModel {
+            RemindersListViewModel(
+                ApplicationProvider.getApplicationContext(),
+                get() as FakeDataSource
+            )
+        }
+        viewModel {
+            SaveReminderViewModel(
+                ApplicationProvider.getApplicationContext(),
+                get() as FakeDataSource
+            )
+        }
+        single{ FakeDataSource() }
+    }
 
     @ExperimentalCoroutinesApi
     @get:Rule
@@ -38,19 +63,20 @@ class RemindersListViewModelTest {
 
     @Before
     fun setupViewModel() {
-        reminderRepository = FakeDataSource()
-        remindersListViewModel = RemindersListViewModel(ApplicationProvider.getApplicationContext(), reminderRepository)
+        stopKoin()
+        startKoin {
+            modules(listOf(koinTestModules))
+        }
     }
 
     @After
     fun stopKoinContext(){
-        GlobalContext.stopKoin()
+        stopKoin()
     }
 
     @Test
     fun loadReminders_withSuccess() = runTest {
 
-        saveReminderViewModel = SaveReminderViewModel(ApplicationProvider.getApplicationContext(), reminderRepository)
         val reminder = ReminderDataItem("Alte Pinakothek", "Museum", "Alte Pinakothek", 48.14881 ,11.57142)
         saveReminderViewModel.validateAndSaveReminder(reminder)
 
@@ -84,7 +110,6 @@ class RemindersListViewModelTest {
     @Test
     fun remindersAvailable_updateShowNoData() = runTest {
 
-        saveReminderViewModel = SaveReminderViewModel(ApplicationProvider.getApplicationContext(), reminderRepository)
         val reminder = ReminderDataItem("Alte Pinakothek", "Museum", "Alte Pinakothek", 48.14881 ,11.57142)
         saveReminderViewModel.validateAndSaveReminder(reminder)
 

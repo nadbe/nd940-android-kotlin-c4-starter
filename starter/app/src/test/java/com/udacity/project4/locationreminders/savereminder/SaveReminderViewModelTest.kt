@@ -17,20 +17,38 @@ import com.google.common.truth.Truth.assertThat
 import com.udacity.project4.MyApp
 import com.udacity.project4.R
 import com.udacity.project4.base.NavigationCommand
+import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
 import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.GlobalContext.stopKoin
+import org.koin.core.context.startKoin
+import org.koin.dsl.module
+import org.koin.test.KoinTest
+import org.koin.test.inject
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
-class SaveReminderViewModelTest {
+class SaveReminderViewModelTest : KoinTest{
 
-    private lateinit var saveReminderViewModel: SaveReminderViewModel
-    private lateinit var reminderRepository: FakeDataSource
+    private val saveReminderViewModel: SaveReminderViewModel by inject()
+
+    private  val koinTestModules = module {
+
+        viewModel {
+            SaveReminderViewModel(
+                ApplicationProvider.getApplicationContext(),
+                get() as FakeDataSource
+            )
+        }
+        single{ FakeDataSource() }
+    }
+
 
     @ExperimentalCoroutinesApi
     @get:Rule
@@ -40,13 +58,17 @@ class SaveReminderViewModelTest {
     var instantExecutorRule = InstantTaskExecutorRule()
 
     @Before
-    fun setupViewModel() {
-        reminderRepository = FakeDataSource()
-        saveReminderViewModel = SaveReminderViewModel(ApplicationProvider.getApplicationContext(), reminderRepository)
+    fun init() {
+        org.koin.core.context.stopKoin()
+        startKoin {
+            androidContext(ApplicationProvider.getApplicationContext<MyApp>())
+            modules(listOf(koinTestModules))
+        }
     }
+
     @After
-    fun stopKoinContext(){
-        stopKoin()
+    fun finish() {
+        org.koin.core.context.stopKoin()
     }
 
     @Test
@@ -80,7 +102,7 @@ class SaveReminderViewModelTest {
     }
 
     @Test
-    fun onclearData() {
+    fun onClearData() {
 
         saveReminderViewModel.onClear()
         assertThat(saveReminderViewModel.reminderTitle.getOrAwaitValue()).isEqualTo(null)

@@ -85,6 +85,7 @@ dependencies {
     //Koin
     implementation "io.insert-koin:koin-android:$koinVersion"
     androidTestImplementation "io.insert-koin:koin-test:$koinVersion"
+    testImplementation "io.insert-koin:koin-test:$koinVersion"
    // implementation "org.koin:koin-androidx-viewmodel:$koinVersion"
 
 

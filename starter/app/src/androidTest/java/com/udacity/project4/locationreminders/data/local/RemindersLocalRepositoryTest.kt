@@ -6,8 +6,11 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.google.common.truth.Truth.assertThat
+import com.udacity.project4.MyApp
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
+import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
+import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -16,30 +19,55 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.Koin
 import org.koin.core.context.GlobalContext
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
+import org.koin.test.KoinTest
+import org.koin.test.inject
+
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 //Medium Test to test the repository
 @MediumTest
-class RemindersLocalRepositoryTest {
+class RemindersLocalRepositoryTest :KoinTest{
 
-    private lateinit var reminderLocalTestRepository: RemindersLocalRepository
+    private val reminderLocalTestRepository: RemindersLocalRepository by inject()
 
-    private lateinit var database: RemindersDatabase
+    private val database: RemindersDatabase by inject()
+
+    private  val koinTestModules = module {
+
+        single {
+             Room.inMemoryDatabaseBuilder(
+                ApplicationProvider.getApplicationContext(),
+                RemindersDatabase::class.java
+            ).allowMainThreadQueries().build()
+        }
+        single{ RemindersLocalRepository(database.reminderDao(), Dispatchers.Main)}
+    }
+
+    @Before
+    fun init() {
+        stopKoin()
+        startKoin {
+            androidContext(ApplicationProvider.getApplicationContext<MyApp>())
+            modules(listOf(koinTestModules))
+        }
+    }
+
+    @After
+    fun finish() {
+        stopKoin()
+    }
 
     @get:Rule
     val instantExecutorRule = InstantTaskExecutorRule()
 
-    @Before
-    fun createDbAndRepository() {
-        database = Room.inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext(),
-            RemindersDatabase::class.java
-        ).allowMainThreadQueries().build()
-
-        reminderLocalTestRepository = RemindersLocalRepository(database.reminderDao(), Dispatchers.Main)
-    }
 
     @After
     fun closeDB() {
