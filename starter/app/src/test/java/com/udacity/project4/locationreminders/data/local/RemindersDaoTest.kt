@@ -78,7 +78,7 @@ class RemindersDaoTest {
     }
 
     @Test
-    fun deleteAllRemindersinDB() {
+    fun deleteAllRemindersInDB() {
         val reminder = ReminderDTO("Alte Pinakothek", "Museum", "Alte Pinakothek", 48.14881 ,11.57142)
         database.reminderDao().saveReminder(reminder)
 

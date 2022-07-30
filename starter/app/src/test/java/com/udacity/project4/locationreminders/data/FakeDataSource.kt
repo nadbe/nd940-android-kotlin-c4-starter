@@ -1,21 +1,19 @@
 package com.udacity.project4.locationreminders.data
 
-import androidx.lifecycle.MutableLiveData
-import com.google.android.gms.tasks.Tasks
+
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
-import kotlinx.coroutines.runBlocking
-import java.lang.Exception
+
 
 //Use FakeDataSource that acts as a test double to the LocalDataSource
 class FakeDataSource : ReminderDataSource {
 
     var reminderData:LinkedHashMap<String, ReminderDTO> = LinkedHashMap()
-    var withError:Boolean = false
+    var shouldReturnError:Boolean = false
 
     override suspend fun getReminders(): Result<List<ReminderDTO>> {
-        if (withError) {
-            withError = false
+        if (shouldReturnError) {
+            shouldReturnError = false
             return Result.Error("Error")
         } else {
             reminderData.let { return Result.Success(reminderData.values.toList()) }

@@ -6,7 +6,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
 import com.udacity.project4.locationreminders.MainCoroutineRule
 import com.udacity.project4.locationreminders.data.FakeDataSource
-import com.udacity.project4.locationreminders.data.dto.Result
 import com.udacity.project4.locationreminders.getOrAwaitValue
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import kotlinx.coroutines.Dispatchers
@@ -67,7 +66,7 @@ class RemindersListViewModelTest {
     fun loadReminders_withError() = runTest {
 
         Dispatchers.setMain(StandardTestDispatcher())
-        reminderRepository.withError = true
+        reminderRepository.shouldReturnError = true
         remindersListViewModel.loadReminders()
         assertThat(remindersListViewModel.showLoading.getOrAwaitValue()).isTrue()
         advanceUntilIdle()
