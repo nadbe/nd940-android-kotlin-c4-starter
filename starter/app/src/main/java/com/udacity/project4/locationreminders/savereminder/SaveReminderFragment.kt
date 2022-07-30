@@ -76,7 +76,9 @@ class SaveReminderFragment : BaseFragment() {
             var newReminder = ReminderDataItem(title, description,location, latitude,longitude)
 
             _viewModel.validateAndSaveReminder(newReminder)
-            addGeoFenceRequest(newReminder)
+            if (!newReminder.location.isNullOrEmpty()) {
+                addGeoFenceRequest(newReminder)
+            }
         }
     }
 
