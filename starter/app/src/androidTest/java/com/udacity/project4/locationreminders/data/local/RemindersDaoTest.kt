@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
+import com.udacity.project4.MainCoroutineRule
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 
 import org.junit.Before;
@@ -24,7 +25,25 @@ import org.junit.Test
 //Unit test the DAO
 @SmallTest
 class RemindersDaoTest {
+    //    TODO: Add testing implementation to the RemindersDao.kt
 
-//    TODO: Add testing implementation to the RemindersDao.kt
+    private lateinit var database: RemindersDatabase
+
+    @ExperimentalCoroutinesApi
+    @get:Rule
+    val mainCoroutineRule = MainCoroutineRule()
+
+    @get:Rule
+    val instantExecutorRule = InstantTaskExecutorRule()
+
+    @Before
+    fun initDb() {
+        database = Room.inMemoryDatabaseBuilder(
+            ApplicationProvider.getApplicationContext(),
+            RemindersDatabase::class.java
+        ).allowMainThreadQueries().build()
+    }
+
+
 
 }

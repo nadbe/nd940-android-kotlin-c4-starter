@@ -11,9 +11,16 @@ import java.lang.Exception
 class FakeDataSource : ReminderDataSource {
 
     var reminderData:LinkedHashMap<String, ReminderDTO> = LinkedHashMap()
+    var withError:Boolean = false
 
     override suspend fun getReminders(): Result<List<ReminderDTO>> {
-         return Result.Success(reminderData.values.toList())
+        if (withError) {
+            withError = false
+            return Result.Error("Error")
+        } else {
+            reminderData.let { return Result.Success(reminderData.values.toList()) }
+        }
+
     }
 
     override suspend fun saveReminder(reminder: ReminderDTO) {
