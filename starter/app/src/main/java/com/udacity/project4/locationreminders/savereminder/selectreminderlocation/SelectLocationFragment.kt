@@ -4,13 +4,13 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import androidx.core.app.ActivityCompat
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -24,7 +24,7 @@ import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.*
-import com.udacity.project4.utils.PermissionManager.Companion.LOCATION_PERMISSION_INDEX
+
 import org.koin.android.ext.android.inject
 import java.util.*
 
@@ -32,6 +32,8 @@ private const val TAG = "SelectLocationFragment"
 
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
+
+    private lateinit var requestPermissionsLauncher: ActivityResultLauncher<String>
 
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
@@ -65,6 +67,18 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         binding.saveButton.setOnClickListener { onLocationSelected() }
 
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        requestPermissionsLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { permission ->
+            if (!permission) {
+                _viewModel.showSnackBarInt.value = R.string.permission_denied_explanation
+            }  else {
+                enableCurrentLocation()
+            }
+        }
+        requestPermissionsLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
     private fun onLocationSelected() {
@@ -108,7 +122,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         map = googleMap
 
         setMapStyle(map)
-        enableCurrentLocation()
         setPoiClick(map)
         setMapClick(map)
 
@@ -119,37 +132,23 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     @SuppressLint("MissingPermission")
     private fun enableCurrentLocation() {
         if (permissionManager.isLocationPermissionGranted(requireContext())) {
-            map.setMyLocationEnabled(true)
+            map.isMyLocationEnabled = true
             zoomToCurrentLocation()
             showInstructionDialog()
-        } else {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_INDEX
-            )
         }
     }
 
 
     @SuppressLint("MissingPermission")
     private fun zoomToCurrentLocation() {
-        if (permissionManager.isLocationPermissionGranted(requireContext())) {
-            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-            fusedLocationProviderClient.getLastLocation().addOnSuccessListener { location: Location? ->
-                if (location != null) {
-                    var zoomLevel = 16f
-                    map.moveCamera(
-                        CameraUpdateFactory.newLatLngZoom(LatLng(location.latitude, location.longitude), zoomLevel)
-                    )
-                }
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        fusedLocationProviderClient.getLastLocation().addOnSuccessListener { location: Location? ->
+            if (location != null) {
+                var zoomLevel = 16f
+                map.moveCamera(
+                    CameraUpdateFactory.newLatLngZoom(LatLng(location.latitude, location.longitude), zoomLevel)
+                )
             }
-        } else {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_INDEX
-            )
         }
     }
 
@@ -203,22 +202,5 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
         alertDialog?.show()
     }
-
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-
-        // Permission denied.
-        if (grantResults.isEmpty() || grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED) {
-            _viewModel.showSnackBarInt.value = R.string.permission_denied_explanation
-        }
-        // Permission granted
-        else if (requestCode == LOCATION_PERMISSION_INDEX) {
-            if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                enableCurrentLocation()
-            }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
 
 }
