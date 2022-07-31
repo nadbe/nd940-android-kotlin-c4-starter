@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
 import com.udacity.project4.locationreminders.MainCoroutineRule
 import com.udacity.project4.locationreminders.data.FakeDataSource
+import com.udacity.project4.locationreminders.data.dto.Result
 import com.udacity.project4.locationreminders.getOrAwaitValue
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import kotlinx.coroutines.Dispatchers
@@ -98,6 +99,13 @@ class RemindersListViewModelTest : KoinTest {
         advanceUntilIdle()
         assertThat(remindersListViewModel.showLoading.getOrAwaitValue()).isFalse()
         assertThat(remindersListViewModel.showSnackBar.getOrAwaitValue()).isEqualTo("Error")
+    }
+
+    @Test
+    fun loadReminder_withError() = runTest {
+        reminderRepository.shouldReturnError = true
+        reminderRepository.getReminder("wrongid")
+        assertThat(reminderRepository.getReminder("wrongID")).isEqualTo(Result.Error("Error"))
     }
 
     @Test
