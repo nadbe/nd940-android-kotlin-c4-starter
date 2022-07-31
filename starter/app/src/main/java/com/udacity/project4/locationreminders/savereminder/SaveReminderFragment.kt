@@ -71,18 +71,24 @@ class SaveReminderFragment : BaseFragment() {
         }
 
         binding.saveReminder.setOnClickListener {
-            val title = _viewModel.reminderTitle.value
-            val description = _viewModel.reminderDescription.value
-            val location = _viewModel.reminderSelectedLocationStr.value
-            val latitude = _viewModel.latitude.value
-            val longitude = _viewModel.longitude.value
 
-            var newReminder = ReminderDataItem(title, description, location, latitude, longitude)
+            if (permissionManager.foregroundAndBackgroundLocationPermissionApproved(requireContext())) {
+                val title = _viewModel.reminderTitle.value
+                val description = _viewModel.reminderDescription.value
+                val location = _viewModel.reminderSelectedLocationStr.value
+                val latitude = _viewModel.latitude.value
+                val longitude = _viewModel.longitude.value
 
-            _viewModel.validateAndSaveReminder(newReminder)
-            if (!newReminder.location.isNullOrEmpty()) {
-                addGeoFenceRequest(newReminder)
+                var newReminder = ReminderDataItem(title, description, location, latitude, longitude)
+
+                _viewModel.validateAndSaveReminder(newReminder)
+                if (!newReminder.location.isNullOrEmpty()) {
+                    addGeoFenceRequest(newReminder)
+                }
+            } else {
+                checkPermissionsAndStartGeofencing(requestPermissionsLauncher)
             }
+
         }
 
         requestPermissionsLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -168,16 +174,12 @@ class SaveReminderFragment : BaseFragment() {
             .addGeofence(geofence)
             .build()
 
-
-        if (permissionManager.foregroundAndBackgroundLocationPermissionApproved(requireContext())) {
-            geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent)?.run {
-                addOnSuccessListener {
-                    Log.e("Add Geofence", geofence.requestId)
-                }
+        geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent)?.run {
+            addOnSuccessListener {
+                Log.e("Add Geofence", geofence.requestId)
             }
-        } else {
-            checkPermissionsAndStartGeofencing(requestPermissionsLauncher)
         }
+
 
     }
 
