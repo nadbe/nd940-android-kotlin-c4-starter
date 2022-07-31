@@ -3,11 +3,7 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.AlertDialog
-import android.content.DialogInterface
-import android.content.Intent
-import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Location
@@ -15,31 +11,27 @@ import android.os.Bundle
 import android.util.Log
 import android.view.*
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
-import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
+import com.udacity.project4.utils.*
+import com.udacity.project4.utils.PermissionManager.Companion.LOCATION_PERMISSION_INDEX
 import org.koin.android.ext.android.inject
 import java.util.*
 
 private const val TAG = "SelectLocationFragment"
 
-class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
-    private val REQUEST_LOCATION_PERMISSION = 1
+class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
@@ -50,7 +42,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var map: GoogleMap
 
     private var currentMarker = MarkerOptions()
-    private lateinit var currentPOI:PointOfInterest
+    private var currentPOI: PointOfInterest? = null
+
+    private var permissionManager = PermissionManager()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -74,15 +68,14 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
     private fun onLocationSelected() {
-        if (currentMarker.position != null) {
+        if (currentMarker.position == null) {
+            _viewModel.showSnackBarInt.value = R.string.err_select_location
+        } else if (currentMarker.position != null) {
             _viewModel.longitude.value = currentMarker.position.longitude
             _viewModel.latitude.value = currentMarker.position.latitude
             _viewModel.reminderSelectedLocationStr.value = currentMarker.title
-            _viewModel.navigationCommand.value = NavigationCommand.Back
-        } else if (currentPOI != null){
             _viewModel.selectedPOI.value = currentPOI
-        } else {
-            _viewModel.showSnackBarInt.value = R.string.err_select_location
+            _viewModel.navigationCommand.value = NavigationCommand.Back
         }
     }
 
@@ -123,60 +116,43 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         map.uiSettings.isZoomGesturesEnabled = true
     }
 
-    private fun enableCurrentLocation(){
-        if (isPermissionGranted()) {
+    @SuppressLint("MissingPermission")
+    private fun enableCurrentLocation() {
+        if (permissionManager.isLocationPermissionGranted(requireContext())) {
             map.setMyLocationEnabled(true)
             zoomToCurrentLocation()
             showInstructionDialog()
-        }
-        else {
+        } else {
             ActivityCompat.requestPermissions(
                 requireActivity(),
-                arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
-                REQUEST_LOCATION_PERMISSION
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_INDEX
             )
         }
     }
 
 
+    @SuppressLint("MissingPermission")
     private fun zoomToCurrentLocation() {
-        fusedLocationProviderClient =
-            LocationServices.getFusedLocationProviderClient(requireActivity())
-        fusedLocationProviderClient.getLastLocation().addOnSuccessListener { location: Location? ->
-            if (location != null) {
-                var zoomLevel = 16f
-                map.moveCamera(
-                    CameraUpdateFactory.newLatLngZoom(
-                        LatLng(
-                            location.latitude,
-                            location.longitude
-                        ), zoomLevel
+        if (permissionManager.isLocationPermissionGranted(requireContext())) {
+            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+            fusedLocationProviderClient.getLastLocation().addOnSuccessListener { location: Location? ->
+                if (location != null) {
+                    var zoomLevel = 16f
+                    map.moveCamera(
+                        CameraUpdateFactory.newLatLngZoom(LatLng(location.latitude, location.longitude), zoomLevel)
                     )
-                )
+                }
             }
+        } else {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_INDEX
+            )
         }
     }
 
-
-    private fun isPermissionGranted() : Boolean {
-        return ContextCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.ACCESS_FINE_LOCATION) === PackageManager.PERMISSION_GRANTED
-    }
-
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        if (requestCode == REQUEST_LOCATION_PERMISSION) {
-            if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                enableCurrentLocation()
-            }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
 
     private fun setMapStyle(map: GoogleMap) {
         try {
@@ -213,11 +189,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
-    private fun showInstructionDialog(){
+    private fun showInstructionDialog() {
         val alertDialog: AlertDialog? = activity?.let {
-            val builder = AlertDialog.Builder(it,R.style.AlertDialogCustom)
+            val builder = AlertDialog.Builder(it, R.style.AlertDialogCustom)
             builder.apply {
-                setNeutralButton(R.string.ok
+                setNeutralButton(
+                    R.string.ok
                 ) { dialog, id ->
                     dialog.cancel()
                 }
@@ -226,4 +203,22 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
         alertDialog?.show()
     }
+
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+
+        // Permission denied.
+        if (grantResults.isEmpty() || grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED) {
+            _viewModel.showSnackBarInt.value = R.string.permission_denied_explanation
+        }
+        // Permission granted
+        else if (requestCode == LOCATION_PERMISSION_INDEX) {
+            if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                enableCurrentLocation()
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
+
 }
