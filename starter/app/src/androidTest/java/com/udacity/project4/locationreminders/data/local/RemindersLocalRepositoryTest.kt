@@ -83,6 +83,11 @@ class RemindersLocalRepositoryTest :KoinTest{
     }
 
     @Test
+    fun retrieveReminder_WithWrongID() = runTest {
+        assertThat(reminderLocalTestRepository.getReminder("wrongID")).isEqualTo(Result.Error("Reminder not found!"))
+    }
+
+    @Test
     fun saveReminders_retrieveReminders() = runTest {
         val reminder1 = ReminderDTO("Alte Pinakothek", "Museum", "Alte Pinakothek", 48.14881 ,11.57142)
         val reminder2 = ReminderDTO("Botanischer Garten", "Garten", "Botanischer Garten", 48.14348 ,11.56767)
