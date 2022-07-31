@@ -19,7 +19,6 @@ class FakeAndroidDataSource : ReminderDataSource {
         } else {
             reminderData.let { return Result.Success(reminderData.values.toList()) }
         }
-
     }
 
     override suspend fun saveReminder(reminder: ReminderDTO) {
@@ -27,15 +26,18 @@ class FakeAndroidDataSource : ReminderDataSource {
     }
 
     override suspend fun getReminder(id: String): Result<ReminderDTO> {
-        reminderData[id]?.let {
-            return Result.Success(it)
+        if (!shouldReturnError) {
+            reminderData[id]?.let {
+                return Result.Success(it)
+            }
         }
+        shouldReturnError = false
         return Result.Error("Error")
+
     }
 
     override suspend fun deleteAllReminders() {
         reminderData.clear()
     }
-
 
 }
