@@ -1,5 +1,6 @@
 package com.udacity.project4
 
+import android.app.Activity
 import android.app.Application
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
@@ -15,14 +16,21 @@ import kotlinx.coroutines.runBlocking
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.*
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
+import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.matcher.ViewMatchers.*
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.ext.junit.rules.activityScenarioRule
+import androidx.test.rule.ActivityTestRule
 import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.utils.EspressoIdlingResource
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -77,6 +85,10 @@ class RemindersActivityTest :KoinTest {// Extended Koin Test - embed autoclose @
         }
     }
 
+    @ExperimentalCoroutinesApi
+    @get:Rule
+    var rule =ActivityScenarioRule(RemindersActivity::class.java)
+
     @Before
     fun registerIdlingResource() {
         IdlingRegistry.getInstance().register(EspressoIdlingResource.countingIdlingResource)
@@ -89,18 +101,35 @@ class RemindersActivityTest :KoinTest {// Extended Koin Test - embed autoclose @
 
     @Test
     fun loggedInUser_addReminder() {
+        var _activity: Activity? = null
+        rule.scenario.onActivity { activity ->
+            _activity = activity
+        }
         ActivityScenario.launch(RemindersActivity::class.java)
         onView(withId(R.id.addReminderFAB)).perform(click())
         onView(withId(R.id.selectLocation)).perform(click())
         onView(withText("OK")).perform(click())
         onView(withId(R.id.mapsFragment)).perform(click())
         onView(withId(R.id.saveButton)).perform(click())
+
         onView(withId(R.id.reminderTitle)).perform(typeText("Englischer Garten"))
         onView(withId(R.id.reminderDescription)).perform(typeText("Englischer Garten Description"),
             closeSoftKeyboard())
         onView(withId(R.id.saveReminder)).perform(click())
+        onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not(_activity?.window?.decorView))).check(matches(isDisplayed()))
         onView(withId(R.id.reminderssRecyclerView)).perform(
-            RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
-                ViewMatchers.hasDescendant(withText("Englischer Garten")), click()))
+            RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(hasDescendant(withText("Englischer Garten")), click()))
+
+    }
+
+    @Test
+    fun loggedInUser_noTitleSnackBar() {
+        ActivityScenario.launch(RemindersActivity::class.java)
+        onView(withId(R.id.addReminderFAB)).perform(click())
+        onView(withId(R.id.reminderDescription)).perform(typeText("Englischer Garten Description"),
+            closeSoftKeyboard())
+        onView(withId(R.id.saveReminder)).perform(click())
+        onView(withId(com.google.android.material.R.id.snackbar_text))
+            .check(matches(withText(R.string.err_enter_title)))
     }
 }
