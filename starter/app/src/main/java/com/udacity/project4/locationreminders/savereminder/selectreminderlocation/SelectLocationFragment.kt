@@ -78,8 +78,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             _viewModel.longitude.value = currentMarker.position.longitude
             _viewModel.latitude.value = currentMarker.position.latitude
             _viewModel.reminderSelectedLocationStr.value = currentMarker.title
-            _viewModel.selectedPOI.value = currentPOI
             _viewModel.navigationCommand.value = NavigationCommand.Back
+        } else if (currentPOI != null){
+            _viewModel.selectedPOI.value = currentPOI
         } else {
             _viewModel.showSnackBarInt.value = R.string.err_select_location
         }
@@ -116,6 +117,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         setMapStyle(map)
         enableCurrentLocation()
         setPoiClick(map)
+        setMapClick(map)
 
         map.uiSettings.isZoomControlsEnabled = true
         map.uiSettings.isZoomGesturesEnabled = true
@@ -197,6 +199,15 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             currentPOI = poi
             currentMarker.position(poi.latLng)
             currentMarker.title(poi.name)
+            val poiMarker = map.addMarker(currentMarker)
+            poiMarker?.showInfoWindow()
+        }
+    }
+
+    private fun setMapClick(map: GoogleMap) {
+        map.setOnMapClickListener { position ->
+            currentMarker.position(LatLng(position.latitude, position.longitude))
+            currentMarker.title(String.format(Locale.getDefault(), "Lat: %1$.5f, Long: %2$.5f", position.latitude, position.longitude))
             val poiMarker = map.addMarker(currentMarker)
             poiMarker?.showInfoWindow()
         }
