@@ -146,11 +146,6 @@ class SaveReminderFragment : BaseFragment() {
                 }.show()
             }
         }
-        locationSettingsResponseTask.addOnCompleteListener {
-            if (it.isSuccessful){
-
-            }
-        }
     }
 
 
