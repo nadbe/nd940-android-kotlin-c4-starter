@@ -164,7 +164,7 @@ class SaveReminderFragment : BaseFragment() {
                 reminderDataItem.longitude!!.toDouble(),
                 GEOFENCE_RADIUS_IN_METERS
             )
-            .setExpirationDuration(GEOFENCE_EXPIRATION_IN_MILLISECONDS)
+            .setExpirationDuration(Geofence.NEVER_EXPIRE)
             .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
             .build()
 
@@ -203,6 +203,5 @@ class SaveReminderFragment : BaseFragment() {
         internal const val ACTION_GEOFENCE_EVENT =
             "SaveReminderFragment.ACTION_GEOFENCE_EVENT"
         internal const val GEOFENCE_RADIUS_IN_METERS = 100f
-        val GEOFENCE_EXPIRATION_IN_MILLISECONDS: Long = TimeUnit.HOURS.toMillis(1)
     }
 }
