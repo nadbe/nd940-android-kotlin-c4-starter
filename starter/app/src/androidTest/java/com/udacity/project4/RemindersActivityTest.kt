@@ -126,6 +126,10 @@ class RemindersActivityTest :KoinTest {// Extended Koin Test - embed autoclose @
     fun loggedInUser_noTitleSnackBar() {
         ActivityScenario.launch(RemindersActivity::class.java)
         onView(withId(R.id.addReminderFAB)).perform(click())
+        onView(withId(R.id.selectLocation)).perform(click())
+        onView(withText("OK")).perform(click())
+        onView(withId(R.id.mapsFragment)).perform(click())
+        onView(withId(R.id.saveButton)).perform(click())
         onView(withId(R.id.reminderDescription)).perform(typeText("Englischer Garten Description"),
             closeSoftKeyboard())
         onView(withId(R.id.saveReminder)).perform(click())

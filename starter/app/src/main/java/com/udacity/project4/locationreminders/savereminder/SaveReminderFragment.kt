@@ -142,30 +142,34 @@ class SaveReminderFragment : BaseFragment() {
 
         var reminderDataItem = ReminderDataItem(title, description, location, latitude, longitude)
 
-        // add geofence
-        val geofence = Geofence.Builder()
-            .setRequestId(reminderDataItem.id)
-            .setCircularRegion(
-                reminderDataItem.latitude!!.toDouble(),
-                reminderDataItem.longitude!!.toDouble(),
-                GEOFENCE_RADIUS_IN_METERS
-            )
-            .setExpirationDuration(Geofence.NEVER_EXPIRE)
-            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
-            .build()
+        if (longitude != null) {
+            // add geofence
+            val geofence = Geofence.Builder()
+                .setRequestId(reminderDataItem.id)
+                .setCircularRegion(
+                    reminderDataItem.latitude!!.toDouble(),
+                    reminderDataItem.longitude!!.toDouble(),
+                    GEOFENCE_RADIUS_IN_METERS
+                )
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                .build()
 
 
-        val geofencingRequest = GeofencingRequest.Builder()
-            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
-            .addGeofence(geofence)
-            .build()
+            val geofencingRequest = GeofencingRequest.Builder()
+                .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+                .addGeofence(geofence)
+                .build()
 
-        geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent)?.run {
-            addOnSuccessListener {
-                Log.d("Add Geofence", geofence.requestId)
-                _viewModel.showSnackBar.value = getString(R.string.geofences_added)
-                _viewModel.validateAndSaveReminder(reminderDataItem)
+            geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent)?.run {
+                addOnSuccessListener {
+                    Log.d("Add Geofence", geofence.requestId)
+                    _viewModel.showSnackBar.value = getString(R.string.geofences_added)
+                    _viewModel.validateAndSaveReminder(reminderDataItem)
+                }
             }
+        } else {
+            _viewModel.showSnackBarInt.value = R.string.select_location
         }
     }
 
